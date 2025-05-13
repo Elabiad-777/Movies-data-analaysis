@@ -39,14 +39,12 @@ with st.sidebar:
         default=[7.0, 8.0]
     )
     
-    # Revenue category filter
     revenue_filter = st.multiselect(
-        "Revenue Category",
-        options=df['revenue_category'].unique(),
-        default=df['revenue_category'].unique()
-    )
+    "Revenue Category",
+    options=df['revenue_category'].unique().tolist(),
+    default=df['revenue_category'].unique().tolist()
+)
     
-    # Genre filter (if available in your data)
     if 'genres' in df.columns:
         all_genres = sorted(set(g for sublist in df['genres'].str.split('|') for g in sublist))
         genre_filter = st.multiselect(
@@ -55,21 +53,18 @@ with st.sidebar:
             default=all_genres[:3]
         )
 
-# Apply filters
 df_filtered = df[
     (df['runtime'].between(min_runtime, max_runtime)) &
     (df['vote_average'].isin(rating_filter)) &
     (df['revenue_category'].isin(revenue_filter))
 ]
 
-# Apply genre filter if available
 if 'genres' in df.columns and genre_filter:
     df_filtered = df_filtered[df_filtered['genres'].str.contains('|'.join(genre_filter))]
 
-# Create tabs
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "📈 Relationships", "🤖 ML Insights", "🔍 Raw Data"])
-with tab1:  # Overview tab
-    # CSS لتعديل ألوان st.metric لتتناسب مع Dark Mode
+with tab1:
+    
     st.markdown("""
     <style>
         div[data-testid="stMetric"] {
@@ -83,7 +78,6 @@ with tab1:  # Overview tab
     </style>
     """, unsafe_allow_html=True)
 
-    # عرض 3 إحصائيات رئيسية
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Total Movies", len(df_filtered))
@@ -92,7 +86,6 @@ with tab1:  # Overview tab
     with col3:
         st.metric("Avg Revenue", f"${df_filtered['revenue'].mean():,.0f}")
 
-    # رسم بياني لتوزيع التقييمات
     fig1 = px.histogram(
         df_filtered,
         x="vote_average",
@@ -101,7 +94,6 @@ with tab1:  # Overview tab
         color="revenue_category"
     )
 
-    # رسم Boxplot لمدة الفيلم حسب فئة الإيرادات
     fig2 = px.box(
         df_filtered,
         y="runtime",
@@ -109,13 +101,12 @@ with tab1:  # Overview tab
         title="Runtime by Revenue Category"
     )
 
-    # عرض الرسوم
     st.plotly_chart(fig1, use_container_width=True)
     st.plotly_chart(fig2, use_container_width=True)
 
 
 
-with tab2:  # Relationships tab
+with tab2: 
     st.subheader("Budget vs Revenue Analysis")
     fig3 = px.scatter(
         df_filtered, 
@@ -129,7 +120,6 @@ with tab2:  # Relationships tab
     )
     st.plotly_chart(fig3, use_container_width=True)
     
-    # Correlation heatmap
     st.subheader("Feature Correlations")
     numeric_df = df_filtered.select_dtypes(include=['float64', 'int64'])
     fig4 = px.imshow(
@@ -141,10 +131,9 @@ with tab2:  # Relationships tab
     )
     st.plotly_chart(fig4, use_container_width=True)
 
-with tab3:  # ML Insights tab
+with tab3:  
     st.subheader("Machine Learning Predictions")
     
-    # Placeholder for ML results - you can integrate your analysis.py here
     st.image("heatmap.png", caption="Feature Correlations")
     
     col1, col2 = st.columns(2)
@@ -167,7 +156,6 @@ with tab4:  # Raw Data tab
     st.subheader("Filtered Movie Data")
     st.dataframe(df_filtered.sort_values('revenue', ascending=False))
     
-    # Download button
     st.download_button(
         label="📥 Download Filtered Data",
         data=df_filtered.to_csv(index=False),
@@ -175,7 +163,6 @@ with tab4:  # Raw Data tab
         mime="text/csv"
     )
 
-# Add some CSS styling
 st.markdown("""
 <style>
     .stMetric {
